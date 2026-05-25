@@ -106,6 +106,11 @@ get_profile_uv_tools() {
     fi
 }
 
+# Helper function to extract base tool name from a package specifier (e.g., 'ruff==0.3.0' -> 'ruff')
+get_tool_name() {
+    echo "$1" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | cut -d'@' -f1 | cut -d';' -f1 | cut -d'[' -f1 | xargs
+}
+
 # Helper function to read extension IDs from profile config file (Bash 3.2 compatible)
 get_profile_extensions() {
     local profile_file="profiles/$1.extensions"
@@ -262,19 +267,23 @@ if command -v uv &> /dev/null; then
             if [[ ! " ${PROFILES[*]} " == *" ${profile} "* ]]; then
                 inactive_tools=$(get_profile_uv_tools "$profile")
                 for tool in $inactive_tools; do
+                    tool_name=$(get_tool_name "$tool")
                     # Verify this tool is NOT declared in any of the active profiles
                     is_active=false
                     for active_p in "${PROFILES[@]}"; do
                         active_tools=$(get_profile_uv_tools "$active_p")
-                        if [[ " $active_tools " == *" $tool "* ]]; then
-                            is_active=true
-                            break
-                        fi
+                        for active_t in $active_tools; do
+                            active_tool_name=$(get_tool_name "$active_t")
+                            if [[ "$active_tool_name" == "$tool_name" ]]; then
+                                is_active=true
+                                break 2
+                            fi
+                        done
                     done
 
                     if [[ "$is_active" == "false" ]]; then
-                        echo "   🧹 Uninstalling $tool (profile '$profile' inactive)..."
-                        uv tool uninstall "$tool" &>/dev/null || true
+                        echo "   🧹 Uninstalling $tool_name (profile '$profile' inactive)..."
+                        uv tool uninstall "$tool_name" &>/dev/null || true
                     fi
                 done
             fi
@@ -358,8 +367,7 @@ if [[ -n "$VSCODE_CMD" || -n "$AGY_CMD" ]]; then
     # Bulk install in VS Code
     if [[ -n "$VSCODE_CMD" && ${#VSCODE_ARGS[@]} -gt 0 ]]; then
         echo "   Installing extensions in VS Code..."
-        output=$("$VSCODE_CMD" "${VSCODE_ARGS[@]}" 2>&1)
-        exit_code=$?
+        output=$("$VSCODE_CMD" "${VSCODE_ARGS[@]}" 2>&1) && exit_code=0 || exit_code=$?
         if [[ $exit_code -ne 0 ]] && ! echo "$output" | grep -E -q "successfully installed|already installed"; then
             echo "   ⚠️  Could not install some extensions in VS Code."
             echo "      Details: $(echo "$output" | head -n 3)"
@@ -370,8 +378,7 @@ if [[ -n "$VSCODE_CMD" || -n "$AGY_CMD" ]]; then
     # Bulk install in Antigravity IDE
     if [[ -n "$AGY_CMD" && ${#AGY_ARGS[@]} -gt 0 ]]; then
         echo "   Installing extensions in Antigravity IDE..."
-        output=$("$AGY_CMD" "${AGY_ARGS[@]}" 2>&1)
-        exit_code=$?
+        output=$("$AGY_CMD" "${AGY_ARGS[@]}" 2>&1) && exit_code=0 || exit_code=$?
         if [[ $exit_code -ne 0 ]] && ! echo "$output" | grep -E -q "successfully installed|already installed"; then
             echo "   ⚠️  Could not install some extensions in Antigravity IDE."
             echo "      Details: $(echo "$output" | head -n 3)"
