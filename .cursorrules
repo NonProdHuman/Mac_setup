@@ -1,0 +1,18 @@
+# Mac Setup AI Rules & Preferences
+
+## Technology & Tool Preferences
+*   **Python Stack:** I exclusively use `uv` for Python version, tool, and package management.
+    *   Never install Python (`python@3.x`) or Python-based CLI tools (like `pre-commit`, `yt-dlp`) via Homebrew/Brewfile.
+    *   Instead, manage them via `uv tool` inside `setup.sh` and list them in the profile `.uv` files.
+*   **Shell Scripts:** Keep all bash scripts (`setup.sh`, `macos_defaults.sh`) strictly compatible with macOS's default **Bash 3.2** (e.g., do not use associative arrays `declare -A`).
+
+## Repository Architecture
+*   **Modular Profiles:** This repository uses a modular profile structure under the `profiles/` directory:
+    *   Homebrew formulas go in `profiles/<profile>.Brewfile`.
+    *   `uv` tools go in `profiles/<profile>.uv`.
+    *   Profile-specific shell configurations go in `profiles/<profile>.zshrc`.
+*   **Local Configurations:** Never commit `.active_profiles` to Git; it is ignored on purpose to allow machine-specific configurations.
+
+## Git & Commits
+*   Always respect local Git ignore rules (`.gitignore` and `.git/info/exclude`).
+*   Ensure pre-commit formatting and ShellCheck checks are kept clean when suggesting script modifications.

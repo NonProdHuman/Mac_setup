@@ -1,5 +1,4 @@
 # Basic Profile Brewfile
-# Core terminal tools, developer utilities, and standard system apps.
 
 # --- Command Line Tools (brew) ---
 brew "bat"

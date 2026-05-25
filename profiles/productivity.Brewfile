@@ -1,5 +1,6 @@
 # Productivity Profile Brewfile
-# Office/media suite, system virtualization, slicing, and gaming tools.
+
+# --- Command Line Tools (brew) ---
 
 # --- Graphical Apps (cask) ---
 brew "ffmpeg"

@@ -26,3 +26,10 @@ repos:
         language: system
         types: [shell]
         args: ["--severity=warning"]
+
+      - id: validate-profiles
+        name: Validate Profiles
+        entry: ./scripts/validate_profiles.sh
+        language: script
+        files: ^(profiles/|\.active_profiles\.example)
+        pass_filenames: false

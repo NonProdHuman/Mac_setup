@@ -88,9 +88,10 @@ export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"
 # uv Tools Path
 export PATH="$HOME/.local/bin:$PATH"
 
-# Load profile-specific configurations if they exist
-for profile in basic productivity ai; do
-    if [[ -f "$HOME/.zshrc.${profile}" ]]; then
-        source "$HOME/.zshrc.${profile}"
+# Load all profile-specific configurations dynamically
+for rc_file in "$HOME"/.zshrc.*; do
+    # Skip backup files and ensure it is a regular file
+    if [[ -f "$rc_file" && "$rc_file" != *.backup ]]; then
+        source "$rc_file"
     fi
 done

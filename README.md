@@ -4,7 +4,8 @@ This is an idempotent setup project for configuring a macOS environment. It uses
 
 ## Features
 
-*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, and Mac App Store apps divided into separate profiles (e.g., `basic` for core tools, `productivity` for office/media apps).
+*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, and Mac App Store apps divided into separate profiles (e.g., `basic` for core tools, `productivity` for office/media apps, `developer` for coding, `gaming` for games).
+*   **Dynamic Discovery:** Adding a profile is as simple as dropping a file (like `profiles/<name>.Brewfile` or `profiles/<name>.uv`) into the profiles directory—no script editing required.
 *   **Zsh Usability & Auto-Completion:** Pre-configured auto-suggestions, tab-completions, and a lightweight, native Git branch prompt without bloated shell frameworks.
 *   **System Customization:** Sensible macOS defaults for trackpad (tap-to-click, secondary click), keyboard (high repeat rate), Finder, screenshot output, and plain-text TextEdit.
 *   **Touch ID for Sudo:** Bio-authenticated privilege elevation in the terminal that survives macOS system updates.
@@ -16,22 +17,39 @@ This is an idempotent setup project for configuring a macOS environment. It uses
 
 1. Open Terminal.
 2. Navigate to this directory.
-3. Run the setup orchestrator with your desired profiles:
+3. Run the setup orchestrator:
 
-### Option A: Standard (Core tools)
 ```bash
 ./setup.sh
 ```
 
-### Option B: Core + Productivity (Adds MS Office, Zoom, Docker, Calibre, etc.)
-```bash
-./setup.sh --profile productivity
-```
+### Profile Configuration
+The orchestrator automatically saves your active profiles to a local `.active_profiles` file (which is git-ignored).
+*   **Select Profiles:** Specify which profiles you want on this machine (e.g., `developer` and `productivity`):
+    ```bash
+    ./setup.sh --profile developer,productivity
+    ```
+    *This will save these selections to `.active_profiles`. Subsequent runs of `./setup.sh` will remember and apply them automatically.*
+*   **Reset to Standard:** Reset the machine back to only core tools (clears `.active_profiles`):
+    ```bash
+    ./setup.sh --profile basic
+    ```
+*   **Enable Cleanup:** Uninstall any packages and `uv` tools not declared in your active profiles:
+    ```bash
+    ./setup.sh --cleanup
+    ```
 
-### Option C: Adding Cleanup (Removes any packages not in the active profiles)
-```bash
-./setup.sh --profile productivity --cleanup
-```
+---
+
+## Creating Custom Profiles
+You can easily create your own profiles. The setup script dynamically discovers any configuration files in the `profiles/` directory:
+
+*   **`profiles/<name>.Brewfile`:** Homebrew formulas, casks, and Mac App Store apps.
+*   **`profiles/<name>.uv`:** Python command-line tools to install globally via `uv`.
+*   **`profiles/<name>.zshrc`:** Shell configurations, aliases, and environment variables.
+
+*All files are optional; a profile can contain any subset of these configs.*
+
 ---
 
 ## Manual Configurations

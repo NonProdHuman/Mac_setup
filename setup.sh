@@ -172,12 +172,12 @@ else
 fi
 
 # 3. Apply macOS defaults
-if [[ -f "macos_defaults.sh" ]]; then
+if [[ -f "scripts/macos_defaults.sh" ]]; then
     echo "⚙️  Applying macOS system preferences..."
     # Source the file so it runs in the current shell, or execute it
-    bash macos_defaults.sh
+    bash scripts/macos_defaults.sh
 else
-    echo "⚠️  No macos_defaults.sh found in the current directory."
+    echo "⚠️  No macos_defaults.sh found in the scripts directory."
 fi
 
 # 4. Set up dotfiles
