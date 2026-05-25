@@ -1,0 +1,28 @@
+# Pre-commit configuration for mac_setup
+# Runs standard checks, secret detection, and ShellCheck for bash scripts.
+# Run `pre-commit install` to set up git hooks on this machine.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: detect-private-key
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        exclude: package.lockjson # Exclude lock files or any other safe files if needed
+
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ["--severity=warning"]
