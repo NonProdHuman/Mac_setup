@@ -83,7 +83,7 @@ get_all_available_profiles() {
     local name
     local profiles=()
     if [[ -d "profiles" ]]; then
-        for f in profiles/*.Brewfile profiles/*.uv profiles/*.zshrc; do
+        for f in profiles/*.Brewfile profiles/*.uv profiles/*.zshrc profiles/*.extensions; do
             if [[ -e "$f" ]]; then
                 name=$(basename "$f")
                 name="${name%.*}"
@@ -100,6 +100,15 @@ get_all_available_profiles() {
 # Helper function to read uv tools from profile config file (Bash 3.2 compatible)
 get_profile_uv_tools() {
     local profile_file="profiles/$1.uv"
+    if [[ -f "$profile_file" ]]; then
+        # Read file, ignore empty lines and comment lines
+        grep -v -E '^#|^$' "$profile_file"
+    fi
+}
+
+# Helper function to read extension IDs from profile config file (Bash 3.2 compatible)
+get_profile_extensions() {
+    local profile_file="profiles/$1.extensions"
     if [[ -f "$profile_file" ]]; then
         # Read file, ignore empty lines and comment lines
         grep -v -E '^#|^$' "$profile_file"
@@ -275,10 +284,143 @@ else
     echo "⚠️  uv is not installed. Skipping Python tool setup."
 fi
 
+# 7. Install IDE Extensions
+echo "🔌 Installing IDE extensions..."
+
+# Ensure Antigravity IDE is configured to use the VS Code Marketplace
+product_json="/Applications/Antigravity IDE.app/Contents/Resources/app/product.json"
+if [[ -f "$product_json" ]]; then
+    if grep -q "open-vsx.org" "$product_json"; then
+        echo "   🔧 Configuring Antigravity IDE to use VS Code Marketplace..."
+        python3 -c '
+import json
+path = "/Applications/Antigravity IDE.app/Contents/Resources/app/product.json"
+try:
+    with open(path, "r") as f:
+        data = json.load(f)
+    data["extensionsGallery"] = {
+        "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
+        "cacheUrl": "https://vscode.blob.core.windows.net/gallery/index",
+        "itemUrl": "https://marketplace.visualstudio.com/items"
+    }
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
+    print("   ✅ VS Code Marketplace configured successfully.")
+except Exception as e:
+    print(f"   ⚠️  Could not configure VS Code Marketplace: {e}")
+' 2>/dev/null || true
+    fi
+fi
+VSCODE_CMD=""
+if command -v code &> /dev/null; then
+    VSCODE_CMD="code"
+fi
+
+AGY_CMD=""
+if command -v agy-ide &> /dev/null; then
+    AGY_CMD="agy-ide"
+elif command -v antigravity-ide &> /dev/null; then
+    AGY_CMD="antigravity-ide"
+elif [[ -x "/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" ]]; then
+    AGY_CMD="/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide"
+fi
+
+if [[ -n "$VSCODE_CMD" || -n "$AGY_CMD" ]]; then
+    # Collect and deduplicate extensions to install
+    declare -a VSCODE_ARGS=()
+    declare -a AGY_ARGS=()
+    for profile in "${PROFILES[@]}"; do
+        ext_file="profiles/${profile}.extensions"
+        if [[ -f "$ext_file" ]]; then
+            while IFS= read -r ext || [[ -n "$ext" ]]; do
+                # Strip comments and trim whitespace
+                ext="${ext%%#*}"
+                ext=$(echo "$ext" | xargs)
+
+                if [[ -n "$ext" ]]; then
+                    # Avoid duplicate arguments
+                    already_added=false
+                    for arg in "${VSCODE_ARGS[@]}"; do
+                        if [[ "$arg" == "$ext" ]]; then
+                            already_added=true
+                            break
+                        fi
+                    done
+                    if [[ "$already_added" == "false" ]]; then
+                        VSCODE_ARGS+=("--install-extension" "$ext")
+                        AGY_ARGS+=("--install-extension" "$ext")
+                    fi
+                fi
+            done < "$ext_file"
+        fi
+    done
+
+    # Bulk install in VS Code
+    if [[ -n "$VSCODE_CMD" && ${#VSCODE_ARGS[@]} -gt 0 ]]; then
+        echo "   Installing extensions in VS Code..."
+        output=$("$VSCODE_CMD" "${VSCODE_ARGS[@]}" 2>&1)
+        exit_code=$?
+        if [[ $exit_code -ne 0 ]] && ! echo "$output" | grep -E -q "successfully installed|already installed"; then
+            echo "   ⚠️  Could not install some extensions in VS Code."
+            echo "      Details: $(echo "$output" | head -n 3)"
+        fi
+        sleep 1
+    fi
+
+    # Bulk install in Antigravity IDE
+    if [[ -n "$AGY_CMD" && ${#AGY_ARGS[@]} -gt 0 ]]; then
+        echo "   Installing extensions in Antigravity IDE..."
+        output=$("$AGY_CMD" "${AGY_ARGS[@]}" 2>&1)
+        exit_code=$?
+        if [[ $exit_code -ne 0 ]] && ! echo "$output" | grep -E -q "successfully installed|already installed"; then
+            echo "   ⚠️  Could not install some extensions in Antigravity IDE."
+            echo "      Details: $(echo "$output" | head -n 3)"
+        fi
+        sleep 1
+    fi
+
+    # Clean up extensions from inactive profiles (if --cleanup is active)
+    if [[ "$CLEANUP" == "true" ]]; then
+        IFS=' ' read -r -a ALL_CLEANUP_PROFILES <<< "$(get_all_available_profiles)"
+        for profile in "${ALL_CLEANUP_PROFILES[@]}"; do
+            if [[ ! " ${PROFILES[*]} " == *" ${profile} "* ]]; then
+                inactive_exts=$(get_profile_extensions "$profile")
+                for ext in $inactive_exts; do
+                    # Verify this extension is NOT declared in any of the active profiles
+                    is_active=false
+                    for active_p in "${PROFILES[@]}"; do
+                        active_exts=$(get_profile_extensions "$active_p")
+                        if [[ " $active_exts " == *" $ext "* ]]; then
+                            is_active=true
+                            break
+                        fi
+                    done
+
+                    if [[ "$is_active" == "false" ]]; then
+                        if [[ -n "$VSCODE_CMD" ]]; then
+                            echo "   🧹 Uninstalling $ext in VS Code (profile '$profile' inactive)..."
+                            "$VSCODE_CMD" --uninstall-extension "$ext" >/dev/null 2>&1 || true
+                            sleep 1
+                        fi
+                        if [[ -n "$AGY_CMD" ]]; then
+                            echo "   🧹 Uninstalling $ext in Antigravity IDE (profile '$profile' inactive)..."
+                            "$AGY_CMD" --uninstall-extension "$ext" >/dev/null 2>&1 || true
+                            sleep 1
+                        fi
+                    fi
+                done
+            fi
+        done
+    fi
+else
+    echo "   ⚠️  No VS Code or Antigravity IDE CLI found. Skipping extension installation."
+fi
+
 if [[ -n "$UNLISTED_WARNING" ]]; then
     echo ""
     echo "⚠️  WARNING: Unlisted Packages Found"
     echo "The following packages are currently installed but not defined in your Brewfile:"
+    # shellcheck disable=SC2001
     echo "$UNLISTED_WARNING" | sed 's/^/   /g'
     echo "👉 Run './setup.sh --cleanup' to remove them."
     echo ""

@@ -29,7 +29,7 @@ if [[ -d "profiles" ]]; then
         fi
 
         # Check extensions
-        if [[ "$ext" != "Brewfile" && "$ext" != "uv" && "$ext" != "zshrc" ]]; then
+        if [[ "$ext" != "Brewfile" && "$ext" != "uv" && "$ext" != "zshrc" && "$ext" != "extensions" ]]; then
             log_error "Unknown file type in profiles directory: $filename"
             continue
         fi
@@ -55,6 +55,7 @@ if [[ -d "profiles" ]]; then
         # Validate uv file syntax
         if [[ "$ext" == "uv" ]]; then
             line_num=0
+            uv_pattern="^[a-zA-Z0-9_.-]+[=><~!*,a-zA-Z0-9_.-]*$"
             while IFS= read -r line || [[ -n "$line" ]]; do
                 line_num=$((line_num + 1))
                 trimmed="${line%%#*}"
@@ -64,8 +65,26 @@ if [[ -d "profiles" ]]; then
                     # Check if line contains spaces or invalid chars for package names
                     if [[ "$trimmed" =~ [[:space:]] ]]; then
                         log_error "Invalid line in $filename:$line_num: '$trimmed'. Package names cannot contain spaces."
-                    elif [[ ! "$trimmed" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
-                        log_error "Invalid package name in $filename:$line_num: '$trimmed'. Only alphanumeric, dot, underscore, and hyphen characters are allowed."
+                    elif [[ ! "$trimmed" =~ $uv_pattern ]]; then
+                        log_error "Invalid package name in $filename:$line_num: '$trimmed'. Must be a valid PEP 508 package name or version specifier (e.g. name, name==version, or name>=version)."
+                    fi
+                fi
+            done < "$f"
+        fi
+
+        # Validate extensions file syntax
+        if [[ "$ext" == "extensions" ]]; then
+            line_num=0
+            ext_pattern="^[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+(@[a-zA-Z0-9_.-]+)?$"
+            while IFS= read -r line || [[ -n "$line" ]]; do
+                line_num=$((line_num + 1))
+                trimmed="${line%%#*}"
+                trimmed=$(echo "$trimmed" | xargs)
+
+                if [[ -n "$trimmed" ]]; then
+                    # Check if line matches publisher.extension-name format
+                    if [[ ! "$trimmed" =~ $ext_pattern ]]; then
+                        log_error "Invalid extension ID in $filename:$line_num: '$trimmed'. Must be in publisher.name[@version] format."
                     fi
                 fi
             done < "$f"
@@ -80,7 +99,7 @@ if [[ -f ".active_profiles.example" ]]; then
         line=$(echo "$line" | xargs)
         if [[ -n "$line" ]]; then
             # Verify at least one profile file exists
-            if [[ ! -f "profiles/${line}.Brewfile" && ! -f "profiles/${line}.uv" && ! -f "profiles/${line}.zshrc" ]]; then
+            if [[ ! -f "profiles/${line}.Brewfile" && ! -f "profiles/${line}.uv" && ! -f "profiles/${line}.zshrc" && ! -f "profiles/${line}.extensions" ]]; then
                 log_error "Example profile '${line}' listed in .active_profiles.example does not exist in profiles/ folder."
             fi
         fi

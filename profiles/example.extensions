@@ -1,0 +1,7 @@
+# Example Editor Extensions
+
+# Standard extension ID
+christian-kohler.path-intellisense
+
+# Version pinned extension ID
+dbaeumer.vscode-eslint@2.4.4

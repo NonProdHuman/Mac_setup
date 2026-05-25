@@ -1,0 +1,8 @@
+# Example uv Global Tools
+
+# Standard tool installation
+cowsay
+
+# Version pinned PEP 508 tool installation
+ruff==0.3.0
+black>=24.0.0,<=25.0.0
