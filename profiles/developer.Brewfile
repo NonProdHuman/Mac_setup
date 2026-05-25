@@ -1,14 +1,19 @@
 #Developer Profile Brewfile
 
 # --- Command Line Tools (brew) ---
+brew "node"
+brew "fd"
+brew "git-delta"
+brew "eza"
+
+# --- Graphical Apps (cask) ---
 cask "antigravity-cli"
 cask "antigravity"
+cask "antigravity-ide"
 cask "docker-desktop"
 cask "iterm2"
 cask "qlmarkdown"
 cask "syntax-highlight"
 cask "visual-studio-code"
-
-# --- Graphical Apps (cask) ---
 
 # --- Mac App Store Apps (mas) ---
