@@ -9,8 +9,8 @@ This is an idempotent setup project for configuring a macOS environment. It uses
 *   **Zsh Usability & Auto-Completion:** Pre-configured auto-suggestions, tab-completions, and a lightweight, native Git branch prompt without bloated shell frameworks.
 *   **System Customization:** Sensible macOS defaults for trackpad (tap-to-click, secondary click), keyboard (high repeat rate), Finder, screenshot output, and plain-text TextEdit.
 *   **Touch ID for Sudo:** Bio-authenticated privilege elevation in the terminal that survives macOS system updates.
-*   **Cleanup Guard:** Automatic detection and optional uninstallation of packages not defined in your active profiles.
-*   **IDE Extension Syncing:** Automatically installs and manages editor extensions for both VS Code and Antigravity IDE based on active profiles.
+*   **Cleanup Guard:** Automatic detection and optional uninstallation of packages, global `uv` tools, and IDE extensions not defined in your active profiles.
+*   **IDE Extension Syncing:** Automatically installs and manages editor extensions for both VS Code and Antigravity IDE based on active profiles. It automatically patches Antigravity IDE to use the official VS Code Marketplace, ensuring compatibility with proprietary extensions.
 
 ---
 
@@ -35,7 +35,7 @@ The orchestrator automatically saves your active profiles to a local `.active_pr
     ```bash
     ./setup.sh --profile basic
     ```
-*   **Enable Cleanup:** Uninstall any packages and `uv` tools not declared in your active profiles:
+*   **Enable Cleanup:** Uninstall any packages, `uv` tools, and IDE extensions not declared in your active profiles:
     ```bash
     ./setup.sh --cleanup
     ```
@@ -46,12 +46,12 @@ The orchestrator automatically saves your active profiles to a local `.active_pr
 You can easily create your own profiles. The setup script dynamically discovers any configuration files in the `profiles/` directory.
 
 To see how these are structured, you can refer to the provided `example` profile:
-*   **`profiles/<name>.Brewfile`:** Homebrew formulas, casks, and Mac App Store apps. (See [example.Brewfile](file:///Users/jeff/git/mac_setup/profiles/example.Brewfile))
-*   **`profiles/<name>.uv`:** Python command-line tools to install globally via `uv`. (See [example.uv](file:///Users/jeff/git/mac_setup/profiles/example.uv))
-*   **`profiles/<name>.zshrc`:** Shell configurations, aliases, and environment variables. (See [example.zshrc](file:///Users/jeff/git/mac_setup/profiles/example.zshrc))
-*   **`profiles/<name>.extensions`:** Extension IDs (`publisher.name`) for VS Code and Antigravity IDE. (See [example.extensions](file:///Users/jeff/git/mac_setup/profiles/example.extensions))
+*   **`profiles/<name>.Brewfile`:** Homebrew formulas, casks, and Mac App Store apps. (See [example.Brewfile](profiles/example.Brewfile))
+*   **`profiles/<name>.uv`:** Python command-line tools to install globally via `uv`. (See [example.uv](profiles/example.uv))
+*   **`profiles/<name>.zshrc`:** Shell configurations, aliases, and environment variables. (See [example.zshrc](profiles/example.zshrc))
+*   **`profiles/<name>.extensions`:** Extension IDs (`publisher.name`) for VS Code and Antigravity IDE. (See [example.extensions](profiles/example.extensions))
 
-*All files are optional; a profile can contain any subset of these configs.*
+*All files are optional; a profile can contain any subset of these configs. Optional version pinning is supported for `.uv` package specifiers (e.g. `ruff==0.3.0` or `black>=24.0.0`) and `.extensions` IDs (e.g. `publisher.name@version`).*
 
 ---
 
