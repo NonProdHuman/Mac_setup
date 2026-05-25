@@ -1,0 +1,2 @@
+cask "minecraft"
+cask "steam"

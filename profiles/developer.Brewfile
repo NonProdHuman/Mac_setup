@@ -1,0 +1,7 @@
+cask "antigravity-cli"
+cask "antigravity"
+cask "docker-desktop"
+cask "iterm2"
+cask "qlmarkdown"
+cask "syntax-highlight"
+cask "visual-studio-code"

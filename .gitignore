@@ -1,0 +1,9 @@
+# Local environment profiles config (ignored by git)
+.active_profiles
+
+# Temporary compiled Brewfile files
+.Brewfile.compiled
+.Brewfile.tmp
+
+# macOS folder attributes
+.DS_Store
