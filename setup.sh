@@ -111,6 +111,11 @@ get_tool_name() {
     echo "$1" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | cut -d'@' -f1 | cut -d';' -f1 | cut -d'[' -f1 | xargs
 }
 
+# Helper function to list installed uv tool package names
+get_installed_uv_tools() {
+    uv tool list 2>/dev/null | awk '/^[^[:space:]-]/ {print $1}'
+}
+
 # Helper function to read extension IDs from profile config file (Bash 3.2 compatible)
 get_profile_extensions() {
     local profile_file="profiles/$1.extensions"
@@ -118,6 +123,22 @@ get_profile_extensions() {
         # Read file, ignore empty lines and comment lines
         grep -v -E '^#|^$' "$profile_file"
     fi
+}
+
+# Helper function to extract base extension ID from an extension specifier
+get_extension_name() {
+    echo "$1" | cut -d'@' -f1 | xargs
+}
+
+# Helper function to list installed IDE extension IDs
+get_installed_extensions() {
+    "$1" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]'
+}
+
+# Helper function to check whether a newline-delimited list contains a value
+list_contains_line() {
+    local needle="$1"
+    grep -F -x -- "$needle" >/dev/null
 }
 
 echo "🚀 Starting Mac Setup..."
@@ -262,6 +283,7 @@ if command -v uv &> /dev/null; then
 
     # Clean up tools from inactive profiles (if --cleanup is active)
     if [[ "$CLEANUP" == "true" ]]; then
+        installed_uv_tools=$(get_installed_uv_tools)
         IFS=' ' read -r -a ALL_CLEANUP_PROFILES <<< "$(get_all_available_profiles)"
         for profile in "${ALL_CLEANUP_PROFILES[@]}"; do
             if [[ ! " ${PROFILES[*]} " == *" ${profile} "* ]]; then
@@ -281,9 +303,10 @@ if command -v uv &> /dev/null; then
                         done
                     done
 
-                    if [[ "$is_active" == "false" ]]; then
+                    if [[ "$is_active" == "false" ]] && printf '%s\n' "$installed_uv_tools" | list_contains_line "$tool_name"; then
                         echo "   🧹 Uninstalling $tool_name (profile '$profile' inactive)..."
                         uv tool uninstall "$tool_name" &>/dev/null || true
+                        installed_uv_tools=$(printf '%s\n' "$installed_uv_tools" | grep -F -x -v -- "$tool_name" || true)
                     fi
                 done
             fi
@@ -388,30 +411,47 @@ if [[ -n "$VSCODE_CMD" || -n "$AGY_CMD" ]]; then
 
     # Clean up extensions from inactive profiles (if --cleanup is active)
     if [[ "$CLEANUP" == "true" ]]; then
+        VSCODE_INSTALLED_EXTENSIONS=""
+        AGY_INSTALLED_EXTENSIONS=""
+        if [[ -n "$VSCODE_CMD" ]]; then
+            VSCODE_INSTALLED_EXTENSIONS=$(get_installed_extensions "$VSCODE_CMD")
+        fi
+        if [[ -n "$AGY_CMD" ]]; then
+            AGY_INSTALLED_EXTENSIONS=$(get_installed_extensions "$AGY_CMD")
+        fi
+
         IFS=' ' read -r -a ALL_CLEANUP_PROFILES <<< "$(get_all_available_profiles)"
         for profile in "${ALL_CLEANUP_PROFILES[@]}"; do
             if [[ ! " ${PROFILES[*]} " == *" ${profile} "* ]]; then
                 inactive_exts=$(get_profile_extensions "$profile")
                 for ext in $inactive_exts; do
+                    ext_name=$(get_extension_name "$ext")
+                    ext_key=$(echo "$ext_name" | tr '[:upper:]' '[:lower:]')
                     # Verify this extension is NOT declared in any of the active profiles
                     is_active=false
                     for active_p in "${PROFILES[@]}"; do
                         active_exts=$(get_profile_extensions "$active_p")
-                        if [[ " $active_exts " == *" $ext "* ]]; then
-                            is_active=true
-                            break
-                        fi
+                        for active_ext in $active_exts; do
+                            active_ext_name=$(get_extension_name "$active_ext")
+                            active_ext_key=$(echo "$active_ext_name" | tr '[:upper:]' '[:lower:]')
+                            if [[ "$active_ext_key" == "$ext_key" ]]; then
+                                is_active=true
+                                break 2
+                            fi
+                        done
                     done
 
                     if [[ "$is_active" == "false" ]]; then
-                        if [[ -n "$VSCODE_CMD" ]]; then
-                            echo "   🧹 Uninstalling $ext in VS Code (profile '$profile' inactive)..."
-                            "$VSCODE_CMD" --uninstall-extension "$ext" >/dev/null 2>&1 || true
+                        if [[ -n "$VSCODE_CMD" ]] && printf '%s\n' "$VSCODE_INSTALLED_EXTENSIONS" | list_contains_line "$ext_key"; then
+                            echo "   🧹 Uninstalling $ext_name in VS Code (profile '$profile' inactive)..."
+                            "$VSCODE_CMD" --uninstall-extension "$ext_name" >/dev/null 2>&1 || true
+                            VSCODE_INSTALLED_EXTENSIONS=$(printf '%s\n' "$VSCODE_INSTALLED_EXTENSIONS" | grep -F -x -v -- "$ext_key" || true)
                             sleep 1
                         fi
-                        if [[ -n "$AGY_CMD" ]]; then
-                            echo "   🧹 Uninstalling $ext in Antigravity IDE (profile '$profile' inactive)..."
-                            "$AGY_CMD" --uninstall-extension "$ext" >/dev/null 2>&1 || true
+                        if [[ -n "$AGY_CMD" ]] && printf '%s\n' "$AGY_INSTALLED_EXTENSIONS" | list_contains_line "$ext_key"; then
+                            echo "   🧹 Uninstalling $ext_name in Antigravity IDE (profile '$profile' inactive)..."
+                            "$AGY_CMD" --uninstall-extension "$ext_name" >/dev/null 2>&1 || true
+                            AGY_INSTALLED_EXTENSIONS=$(printf '%s\n' "$AGY_INSTALLED_EXTENSIONS" | grep -F -x -v -- "$ext_key" || true)
                             sleep 1
                         fi
                     fi
