@@ -7,9 +7,6 @@ brew "git-delta"
 brew "eza"
 
 # --- Graphical Apps (cask) ---
-cask "antigravity-cli"
-cask "antigravity"
-cask "antigravity-ide"
 cask "docker-desktop"
 cask "iterm2"
 cask "qlmarkdown"
