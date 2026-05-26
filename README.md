@@ -4,12 +4,12 @@ This is an idempotent setup project for configuring a macOS environment. It uses
 
 ## Features
 
-*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, and Mac App Store apps divided into separate profiles (e.g., `basic` for core tools, `productivity` for office/media apps, `developer` for coding, `gaming` for games).
+*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, Mac App Store apps, Python tools, and IDE extensions divided into separate profiles (e.g., `basic`, `developer`, `productivity`, `gaming`, and `na`).
 *   **Dynamic Discovery:** Adding a profile is as simple as dropping a file (like `profiles/<name>.Brewfile` or `profiles/<name>.uv`) into the profiles directory—no script editing required.
 *   **Zsh Usability & Auto-Completion:** Pre-configured auto-suggestions, tab-completions, and a lightweight, native Git branch prompt without bloated shell frameworks.
 *   **System Customization:** Sensible macOS defaults for trackpad (tap-to-click, secondary click), keyboard (high repeat rate), Finder, screenshot output, and plain-text TextEdit.
 *   **Touch ID for Sudo:** Bio-authenticated privilege elevation in the terminal that survives macOS system updates.
-*   **Cleanup Guard:** Automatic detection and optional uninstallation of packages, global `uv` tools, and IDE extensions not defined in your active profiles.
+*   **Cleanup Guard:** Automatic detection and optional uninstallation of Homebrew packages, global `uv` tools, and IDE extensions not defined in your active profiles. Cleanup checks installed `uv` tools and IDE extensions before logging removals.
 *   **IDE Extension Syncing:** Automatically installs and manages editor extensions for both VS Code and Antigravity IDE based on active profiles. It automatically patches Antigravity IDE to use the official VS Code Marketplace, ensuring compatibility with proprietary extensions.
 
 ---
@@ -39,6 +39,7 @@ The orchestrator automatically saves your active profiles to a local `.active_pr
     ```bash
     ./setup.sh --cleanup
     ```
+    *Without `--cleanup`, Homebrew cleanup runs in dry-run mode and reports unlisted packages at the end.*
 
 ---
 
@@ -52,6 +53,12 @@ To see how these are structured, you can refer to the provided `example` profile
 *   **`profiles/<name>.extensions`:** Extension IDs (`publisher.name`) for VS Code and Antigravity IDE. (See [example.extensions](profiles/example.extensions))
 
 *All files are optional; a profile can contain any subset of these configs. Optional version pinning is supported for `.uv` package specifiers (e.g. `ruff==0.3.0` or `black>=24.0.0`) and `.extensions` IDs (e.g. `publisher.name@version`).*
+
+Validate profile syntax after editing:
+
+```bash
+./scripts/validate_profiles.sh
+```
 
 ---
 
