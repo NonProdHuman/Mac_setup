@@ -5,6 +5,8 @@ brew "node"
 brew "fd"
 brew "git-delta"
 brew "eza"
+brew "maven"
+brew "openjdk"
 
 # --- Graphical Apps (cask) ---
 cask "docker-desktop"
