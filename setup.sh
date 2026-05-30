@@ -463,6 +463,39 @@ else
     echo "   ⚠️  No VS Code or Antigravity IDE CLI found. Skipping extension installation."
 fi
 
+# 8. Check for macOS updates
+echo "🔍 Checking for macOS updates..."
+updates=$(softwareupdate -l 2>&1) || true
+if echo "$updates" | grep -q -E "Software Update found| \* "; then
+    echo "   ⚠️  macOS updates are available!"
+    echo "$updates" | grep -E '^[[:space:]]*\*' | sed -E 's/^[[:space:]]*\*[[:space:]]*//' | while read -r line; do
+        echo "      👉 $line"
+    done
+    echo "   ℹ️  Please install them via System Settings or run 'sudo softwareupdate -i -a' manually."
+elif echo "$updates" | grep -q "No new software available"; then
+    echo "   ✅ macOS is up to date."
+else
+    echo "   ⚠️  Could not check for macOS updates (tool returned unexpected output or failed)."
+fi
+echo ""
+
+# 9. Check and upgrade Mac App Store apps
+if command -v mas &> /dev/null; then
+    echo "🔍 Checking for Mac App Store updates..."
+    outdated_apps=$(mas outdated 2>/dev/null) || true
+    if [[ -n "$outdated_apps" ]]; then
+        echo "   ⚠️  Outdated Mac App Store apps found:"
+        echo "$outdated_apps" | while read -r line; do
+            echo "      👉 $line"
+        done
+        echo "   📦 Upgrading Mac App Store apps..."
+        mas upgrade || echo "   ⚠️  Some App Store updates could not be completed automatically (you may need to sign in to the App Store)."
+    else
+        echo "   ✅ All Mac App Store apps are up to date."
+    fi
+    echo ""
+fi
+
 if [[ -n "$UNLISTED_WARNING" ]]; then
     echo ""
     echo "⚠️  WARNING: Unlisted Packages Found"
