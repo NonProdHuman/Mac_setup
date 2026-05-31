@@ -2,6 +2,7 @@
 cask "antigravity"
 cask "antigravity-ide"
 cask "antigravity-cli"
+cask "discord"
 
 # --- Mac App Store Apps (mas) ---
 mas "1Password for Safari", id: 1569813296
