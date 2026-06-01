@@ -28,10 +28,6 @@ defaults write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -bool true
 echo "  -> Enabling key repeat when holding down keys"
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
-echo "  -> Setting very fast key repeat rate and short delay"
-defaults write NSGlobalDomain KeyRepeat -int 2
-defaults write NSGlobalDomain InitialKeyRepeat -int 15
-
 
 # --- Dock ---
 
