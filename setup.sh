@@ -83,7 +83,7 @@ get_all_available_profiles() {
     local name
     local profiles=()
     if [[ -d "profiles" ]]; then
-        for f in profiles/*.Brewfile profiles/*.uv profiles/*.zshrc profiles/*.extensions; do
+        for f in profiles/*.Brewfile profiles/*.uv profiles/*.zshrc profiles/*.extensions profiles/*.sh; do
             if [[ -e "$f" ]]; then
                 name=$(basename "$f")
                 name="${name%.*}"
@@ -215,7 +215,16 @@ else
     echo "⚠️  No macos_defaults.sh found in the scripts directory."
 fi
 
-# 4. Set up dotfiles
+# 4. Apply active profile scripts
+for profile in "${PROFILES[@]}"; do
+    profile_script="profiles/${profile}.sh"
+    if [[ -f "$profile_script" ]]; then
+        echo "⚙️  Applying profile script: $profile"
+        bash "$profile_script"
+    fi
+done
+
+# 5. Set up dotfiles
 echo "📄 Setting up dotfiles..."
 if [[ -f "zshrc" ]]; then
     # Backup existing if it's not a symlink pointing to our repo
@@ -248,7 +257,7 @@ else
     echo "⚠️  No zshrc found in the current directory."
 fi
 
-# 5. Secure Zsh completion directories
+# 6. Secure Zsh completion directories
 echo "🔒 Securing Zsh completion directories..."
 # Run compaudit in a non-interactive Zsh subshell to get insecure paths without loading .zshrc
 insecure_dirs=$(zsh -f -c "fpath=(/opt/homebrew/share/zsh-completions /usr/local/share/zsh-completions \$fpath); autoload -Uz compaudit && compaudit" 2>/dev/null) || true
@@ -263,7 +272,7 @@ else
     echo "   ✅ Zsh completion directories are secure."
 fi
 
-# 6. Install tools via uv
+# 7. Install tools via uv
 if command -v uv &> /dev/null; then
     echo "⚙️  Installing tools via uv..."
 
@@ -316,7 +325,7 @@ else
     echo "⚠️  uv is not installed. Skipping Python tool setup."
 fi
 
-# 7. Install IDE Extensions
+# 8. Install IDE Extensions
 echo "🔌 Installing IDE extensions..."
 
 # Ensure Antigravity IDE is configured to use the VS Code Marketplace
@@ -463,7 +472,7 @@ else
     echo "   ⚠️  No VS Code or Antigravity IDE CLI found. Skipping extension installation."
 fi
 
-# 8. Check for macOS updates
+# 9. Check for macOS updates
 echo "🔍 Checking for macOS updates..."
 updates=$(softwareupdate -l 2>&1) || true
 if echo "$updates" | grep -q -E "Software Update found| \* "; then
@@ -479,7 +488,7 @@ else
 fi
 echo ""
 
-# 9. Check and upgrade Mac App Store apps
+# 10. Check and upgrade Mac App Store apps
 if command -v mas &> /dev/null; then
     echo "🔍 Checking for Mac App Store updates..."
     outdated_apps=$(mas outdated 2>/dev/null) || true

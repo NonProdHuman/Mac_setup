@@ -29,7 +29,7 @@ if [[ -d "profiles" ]]; then
         fi
 
         # Check extensions
-        if [[ "$ext" != "Brewfile" && "$ext" != "uv" && "$ext" != "zshrc" && "$ext" != "extensions" ]]; then
+        if [[ "$ext" != "Brewfile" && "$ext" != "uv" && "$ext" != "zshrc" && "$ext" != "extensions" && "$ext" != "sh" ]]; then
             log_error "Unknown file type in profiles directory: $filename"
             continue
         fi
@@ -89,6 +89,13 @@ if [[ -d "profiles" ]]; then
                 fi
             done < "$f"
         fi
+
+        # Validate shell script syntax
+        if [[ "$ext" == "sh" ]]; then
+            if ! bash -n "$f"; then
+                log_error "Invalid shell syntax in $filename."
+            fi
+        fi
     done
 fi
 
@@ -99,7 +106,7 @@ if [[ -f ".active_profiles.example" ]]; then
         line=$(echo "$line" | xargs)
         if [[ -n "$line" ]]; then
             # Verify at least one profile file exists
-            if [[ ! -f "profiles/${line}.Brewfile" && ! -f "profiles/${line}.uv" && ! -f "profiles/${line}.zshrc" && ! -f "profiles/${line}.extensions" ]]; then
+            if [[ ! -f "profiles/${line}.Brewfile" && ! -f "profiles/${line}.uv" && ! -f "profiles/${line}.zshrc" && ! -f "profiles/${line}.extensions" && ! -f "profiles/${line}.sh" ]]; then
                 log_error "Example profile '${line}' listed in .active_profiles.example does not exist in profiles/ folder."
             fi
         fi

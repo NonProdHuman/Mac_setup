@@ -4,8 +4,8 @@ This is an idempotent setup project for configuring a macOS environment. It uses
 
 ## Features
 
-*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, Mac App Store apps, Python tools, and IDE extensions divided into separate profiles (e.g., `basic`, `developer`, `productivity`, `gaming`, and `na`).
-*   **Dynamic Discovery:** Adding a profile is as simple as dropping a file (like `profiles/<name>.Brewfile` or `profiles/<name>.uv`) into the profiles directory—no script editing required.
+*   **Modular Profiles:** Automated installation of CLI tools, GUI applications, Mac App Store apps, Python tools, IDE extensions, and profile-specific scriptlets divided into separate profiles (e.g., `basic`, `developer`, `productivity`, `gaming`, and `na`).
+*   **Dynamic Discovery:** Adding a profile is as simple as dropping a file (like `profiles/<name>.Brewfile`, `profiles/<name>.uv`, or `profiles/<name>.sh`) into the profiles directory—no script editing required.
 *   **Zsh Usability & Auto-Completion:** Pre-configured auto-suggestions, tab-completions, and a lightweight, native Git branch prompt without bloated shell frameworks.
 *   **System Customization:** Sensible macOS defaults for trackpad (tap-to-click, secondary click), keyboard (high repeat rate), Finder, screenshot output, and plain-text TextEdit.
 *   **Touch ID for Sudo:** Bio-authenticated privilege elevation in the terminal that survives macOS system updates.
@@ -51,6 +51,7 @@ To see how these are structured, you can refer to the provided `example` profile
 *   **`profiles/<name>.uv`:** Python command-line tools to install globally via `uv`. (See [example.uv](profiles/example.uv))
 *   **`profiles/<name>.zshrc`:** Shell configurations, aliases, and environment variables. (See [example.zshrc](profiles/example.zshrc))
 *   **`profiles/<name>.extensions`:** Extension IDs (`publisher.name`) for VS Code and Antigravity IDE. (See [example.extensions](profiles/example.extensions))
+*   **`profiles/<name>.sh`:** Profile-specific setup scriptlets that run only when the profile is active. These should be idempotent because they are applied on every setup run.
 
 *All files are optional; a profile can contain any subset of these configs. Optional version pinning is supported for `.uv` package specifiers (e.g. `ruff==0.3.0` or `black>=24.0.0`) and `.extensions` IDs (e.g. `publisher.name@version`).*
 
