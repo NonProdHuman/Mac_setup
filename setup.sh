@@ -181,6 +181,12 @@ for profile in "${PROFILES[@]}"; do
 done
 
 if [[ -f "$COMPILED_BREWFILE" ]]; then
+    # Trust taps that Homebrew requires explicit approval for before bundle loads casks.
+    if grep -q 'tap "terraform-linters/tap"' "$COMPILED_BREWFILE"; then
+        echo "🔐 Trusting Homebrew tap: terraform-linters/tap"
+        brew trust terraform-linters/tap
+    fi
+
     echo "📦 Installing software from consolidated profiles..."
     brew bundle --file="$COMPILED_BREWFILE"
 
