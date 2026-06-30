@@ -9,6 +9,7 @@ cask "elegoo-slicer"
 cask "firefox"
 cask "google-drive"
 cask "google-gemini"
+cask "naps2"
 cask "vlc"
 cask "zoom"
 

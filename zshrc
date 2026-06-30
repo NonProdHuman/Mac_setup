@@ -85,6 +85,9 @@ fi
 # Added by Antigravity IDE
 export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"
 
+# Added for Google Cloud CLI (gcloud)
+export PATH="/opt/homebrew/share/google-cloud-sdk/bin:$PATH"
+
 # uv Tools Path
 export PATH="$HOME/.local/bin:$PATH"
 

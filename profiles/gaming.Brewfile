@@ -4,7 +4,6 @@
 
 # --- Graphical Apps (cask) ---
 cask "minecraft"
-cask "prismlauncher"
 cask "steam"
 
 

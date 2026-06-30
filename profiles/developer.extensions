@@ -8,6 +8,7 @@ timonwong.shellcheck
 
 # Markdown
 yzhang.markdown-all-in-one
+bierner.markdown-mermaid
 
 # Terraform
 hashicorp.terraform
@@ -22,3 +23,6 @@ mechatroner.rainbow-csv
 # Remote Development
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-containers
+
+# AI Assistants
+openai.chatgpt
